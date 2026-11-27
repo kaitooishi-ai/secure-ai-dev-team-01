@@ -1,0 +1,43 @@
+name: Training CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality and security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify sample CSV
+        run: |
+          python - <<'PY'
+          from summary import summarize
+
+          expected = {"account": 2, "network": 1}
+          result = summarize("data/sample.csv")
+          print(f"Sample result: {result}")
+          assert result == expected, f"Expected {expected}, got {result}"
+          PY
+
+      - name: Unit tests
+        run: |
+          if [ -f test_summary.py ]; then
+            python -m pip install pytest
+            python -m pytest -q
+          else
+            echo "Unit tests will be added in Session 2."
+          fi
